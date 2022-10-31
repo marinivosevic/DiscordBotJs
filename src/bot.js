@@ -1,9 +1,8 @@
 const Discord = require("discord.js");
+require("dotenv").config()
+const generateImage = require("./generateimage")
 
-
-const token =
-  "MTAzNTY1NjIxNTAzMzgxNTE5Mg.GTMEC9.GsP_4MZ0e43ap8XYfeFTiOcDCVbc9JFCk0Q_HE";
-  const { Client, GatewayIntentBits } = require('discord.js');
+  const { Client, GatewayIntentBits, MembershipScreeningFieldType } = require('discord.js');
   const client = new Client({ intents: [
           GatewayIntentBits.Guilds,
           GatewayIntentBits.GuildMessages,
@@ -13,12 +12,29 @@ const token =
       ],
    });
 
+
+
+   // Inf za terminal kad se bot upali
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
+
+//odgovor na poruku
 client.on('messageCreate', async message => {
     if (message.content == 'ping') {
         await message.reply("pong")
     }
 })
-client.login(token);
+
+// asinkrona funkcija koja pozdravlja membera kad ude u server
+const welcomeChannelID = "1036669922912247808"
+client.on("guildMemberAdd", async (member) => {
+    const img = await generateImage(member)
+    member.guild.channels.cache.get(welcomeChannelID).send({
+      content:`<@${member.id}> Welcome to the server!`,
+      files: [img]
+    })
+
+})
+
+client.login(process.env.TOKEN);
