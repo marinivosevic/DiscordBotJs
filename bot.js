@@ -12,10 +12,27 @@ const generateImage = require("./generateimage")
       ],
    });
 
+let bot ={
+  client,
+  prefix:"n.",
+  owners:["240524834369568768"]
+}
+
+client.Commands = new Discord.Collection()
+client.Events = new Discord.Collection()
+
+client.loadEvents = (bot,reload) => require("./Handlers/Events")(bot,reload)
+client.loadCommands = (bot,reload) =>require("./Handlers/Commands")(bot,reload)
+
+client.loadEvents(bot,false)
+client.loadCommands(bot,false)
 
 
-   // Inf za terminal kad se bot upali
-client.on("ready", () => {
+
+module.exports = bot
+
+// Inf za terminal kad se bot upali
+/*client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
@@ -35,6 +52,6 @@ client.on("guildMemberAdd", async (member) => {
       files: [img]
     })
 
-})
+})*/
 
 client.login(process.env.TOKEN);
