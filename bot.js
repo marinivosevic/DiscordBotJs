@@ -1,57 +1,48 @@
-const Discord = require("discord.js");
-require("dotenv").config()
-const generateImage = require("./generateimage")
-
-  const { Client, GatewayIntentBits, MembershipScreeningFieldType } = require('discord.js');
-  const client = new Client({ intents: [
-          GatewayIntentBits.Guilds,
-          GatewayIntentBits.GuildMessages,
-          GatewayIntentBits.MessageContent,
-          GatewayIntentBits.GuildMembers,
-          GatewayIntentBits.DirectMessageTyping,
-      ],
-   });
-
-let bot ={
-  client,
-  prefix:"n.",
-  owners:["240524834369568768"]
-}
-
-client.Commands = new Discord.Collection()
-client.Events = new Discord.Collection()
-
-client.loadEvents = (bot,reload) => require("./Handlers/Events")(bot,reload)
-client.loadCommands = (bot,reload) =>require("./Handlers/Commands")(bot,reload)
-
-client.loadEvents(bot,false)
-client.loadCommands(bot,false)
+require("dotenv").config();
+const fs = require('node:fs');
+const path = require('node:path');
+const { Client, GatewayIntentBits, Collection, Events } = require('discord.js');
 
 
 
-module.exports = bot
 
-// Inf za terminal kad se bot upali
-/*client.on("ready", () => {
-  console.log(`Logged in as ${client.user.tag}`);
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.DirectMessageTyping,
+  ],
 });
 
-//odgovor na poruku
-client.on('messageCreate', async message => {
-    if (message.content == 'ping') {
-        await message.reply("pong")
-    }
-})
+client.commands = new Collection();
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-// asinkrona funkcija koja pozdravlja membera kad ude u server
-const welcomeChannelID = "1036669922912247808"
-client.on("guildMemberAdd", async (member) => {
-    const img = await generateImage(member)
-    member.guild.channels.cache.get(welcomeChannelID).send({
-      content:`<@${member.id}> Welcome to the server!`,
-      files: [img]
-    })
+for (const file of commandFiles) {
+	const filePath = path.join(commandsPath, file);
+	const command = require(filePath);
+	client.commands.set(command.data.name, command);
+}
 
-})*/
+client.once(Events.ClientReady, () => {
+	console.log('Ready!');
+});
+
+client.on(Events.InteractionCreate, async interaction => {
+	if (!interaction.isChatInputCommand()) return;
+
+	const command = client.commands.get(interaction.commandName);
+
+	if (!command) return;
+
+	try {
+		await command.execute(interaction);
+	} catch (error) {
+		console.error(error);
+		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+	}
+});
 
 client.login(process.env.TOKEN);
